@@ -3,6 +3,8 @@
 
 
 .data
+
+# string constants
 greetingStr:    .asciiz "Welcome to our MIPS project!"
 
 menuStr:        .ascii  "\nMain Menu:"
@@ -11,6 +13,7 @@ menuStr:        .ascii  "\nMain Menu:"
                 .ascii  "\n3. Palindrome"
                 .ascii  "\n4. Exit"
                 .asciiz "\nPlease select an option: "
+wrongStr:       .asciiz "The select option is wrong.\n"
 
 prompt1:        .asciiz "\nEnter the number of iteration for the series: "
 prompt2:        .asciiz "\na: "
@@ -25,9 +28,12 @@ prompt8:        .asciiz "\nMultiplication of Matrix:"
 prompt9:        .asciiz "\nEnter an input string: "
 prompt10:       .asciiz "\n is palindrome."
 prompt11:       .asciiz "\n is not palindrome."
-endingMessage:       .asciiz "\n Program ends. Bye :)"
+
+endingMessage:  .asciiz "\nProgram ends. Bye :)"
 
 newLine:        .asciiz "\n"
+tab:            .asciiz "\t"
+
 
 .text
 .globl main
@@ -37,24 +43,53 @@ main:
     la $a0, greetingStr
     syscall
 
-    # $t0 represents option variable
-    li $t0, -1           # $t0 = -1
+
+    do:
+        jal printMenu
+
+        # read option value from console
+        li $v0, 5
+        syscall
+        add $t0, $zero, $v0         # option = $v0
+        
+        slti $t1, $t0, 5
+        beq $t1, $zero, default     # if option > 4 go to default
+        beq $t0, $zero, default     # if option == 0 go to default
+
+        C1:
+            bne $t0, 1, C2          # if option != 1 go to C2
+            jal question1
+            j brk                   # break
+        
+        C2:
+            bne $t0, 2, C3          # if option != 2 go to C3
+            jal question2
+            j brk                   # break
+        
+        C3:
+            bne $t0, 3, C4          # if option != 3 go to C4
+            jal question3
+            j brk                   # break
+        
+        C4:
+            j brk                   # break
+
+        default:
+            # print the wrong choosing message
+            li $v0, 4
+            la $a0, wrongStr
+            syscall
+            j brk
+        brk:
     while:
-        beq $t0, 4, endWhile # if $t0 = 4, then go endWhile
+    beq $t0, 4, exit
+    j do
 
-        jal printMenu   # call the printMenu function
-
-        li $v0, 5       # set trap code as 5 to read integer
-        syscall         # read integer from console
-        add $t0, $zero, $v0 # $t0 = $v0 
-        j while
-
-
-    endWhile:
+    exit:
     # print the ending message
-    li $v0, 4           # set trap code as 4 to print string
-    la $a0, endingMessage # $a0 = endingMessage
-    syscall             # print message
+    li $v0, 4           
+    la $a0, endingMessage 
+    syscall             
 
     # send a signal to the system to terminate the program
     li $v0, 10
@@ -63,7 +98,67 @@ main:
 
 # print the main menu
 printMenu:
-    li $v0, 4           # set trap code as 4 to print string
-    la $a0, menuStr     # $a0 = menustr
-    syscall             # print the menu
-    jr $ra              # return
+    li $v0, 4           
+    la $a0, menuStr    
+    syscall             
+    jr $ra
+
+# Question 1
+question1:
+    addi $sp, $sp, -4               # loan space from stack
+    sw $t0, 0($sp)                  # store the option value in stack
+
+    # print the prompt1
+    li $v0, 4
+    la $a0, prompt1
+    syscall
+    
+    # read size of series from console
+    li $v0, 5
+    syscall
+    add $t0, $zero, $v0             # $t1 represents n (size of array)
+
+    # allocate the memory space for a
+    sll $a0, $t0, 2 
+    li $v0, 9
+    syscall
+    add $s0, $v0, $zero             # $s0 represents the address of a
+    move $t2, $s0                   # $t2 represents the temp of a
+
+    # allocate the memory space for b
+    sll $a0, $t0, 2 
+    li $v0, 9
+    syscall
+    add $s1, $v0, $zero             # $s1 represents the address of b
+    move $t3, $s1                   # $t3 represents the temp of a
+
+
+
+    li $t1, 1   # i = 0
+    loop1:
+        slt $t4, $t1, $t0
+        bne $t4, $zero, exitloop1
+
+
+
+        addi $t1, $t1, 1             # i++
+
+
+    j loop1
+
+    exitloop1:
+
+    lw $t0, 0($sp)                  # load the option value from stack
+    addi $sp $sp, 4                 # free memory space from stack
+    jr $ra
+
+
+
+
+# Question 2
+question2:
+    jr $ra
+
+# Question 3
+question3:
+    jr $ra
