@@ -157,8 +157,18 @@ question1:
 
 # Question 2
 question2:
+    addi $sp, $sp, -4               # loan space from stack
+    sw $t0, 0($sp)                  # store the option value in stack
+
+    lw $t0, 0($sp)                  # load the option value from stack
+    addi $sp $sp, 4                 # free memory space from stack
     jr $ra
 
 # Question 3
 question3:
+    addi $sp, $sp, -4               # loan space from stack
+    sw $t0, 0($sp)                  # store the option value in stack
+
+    lw $t0, 0($sp)                  # load the option value from stack
+    addi $sp $sp, 4                 # free memory space from stack
     jr $ra
