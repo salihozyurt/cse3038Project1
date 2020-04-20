@@ -1,7 +1,6 @@
 # Salih ÖZYURT  150117855
 # Enver ASLAN   150115851
 
-
 .data
 
 # string constants
@@ -108,50 +107,96 @@ question1:
     addi $sp, $sp, -4               # loan space from stack
     sw $t0, 0($sp)                  # store the option value in stack
 
-    # print the prompt1
     li $v0, 4
     la $a0, prompt1
-    syscall
+    syscall                         # print the prompt1
     
-    # read size of series from console
     li $v0, 5
     syscall
-    add $t0, $zero, $v0             # $t1 represents n (size of array)
+    add $t0, $zero, $v0             # read size of series from console
 
-    # allocate the memory space for a
     sll $a0, $t0, 2 
     li $v0, 9
-    syscall
-    add $s0, $v0, $zero             # $s0 represents the address of a
-    move $t2, $s0                   # $t2 represents the temp of a
+    syscall                         # allocate the memory space for a
+    add $s1, $v0, $zero             # $s1 represents the address of a
+    add $t1, $s1, $zero             # $t1 represents the temp of a
 
-    # allocate the memory space for b
     sll $a0, $t0, 2 
     li $v0, 9
-    syscall
-    add $s1, $v0, $zero             # $s1 represents the address of b
-    move $t3, $s1                   # $t3 represents the temp of a
+    syscall                         # allocate the memory space for b
+    add $s2, $v0, $zero             # $s2 represents the address of b
+    add $t2, $s2, $zero             # $t2 represents the temp of a
 
-
-
-    li $t1, 1   # i = 0
+    li $t3, 1                       # $t3 represents the iteration i = 1
+    sw $t3, ($s1)
+    sw $t3, ($s2)
     loop1:
-        slt $t4, $t1, $t0
-        bne $t4, $zero, exitloop1
+        slt $t4, $t3, $t0
+        beq $t4, $zero, exitloop1   # if i > n , then go to exitloop 
 
+        lw $t5, ($t1)
+        lw $t6, ($t2)
+        sll $t7, $t6, 1             # temp=2*b[i]
+        add $t6, $t5, $t6           # $t5 = a[i] + b[i]
+        add $t5, $t5, $t7           # $t6 = a[i] + temp
 
-
-        addi $t1, $t1, 1             # i++
-
-
+        addi $t3, $t3, 1            # i++
+        addi $t1, $t1, 4
+        sw $t5, ($t1)               # a[i+1] = $t5
+        addi $t2, $t2, 4
+        sw $t6, ($t2)               # b[i+1] = $t6        
     j loop1
-
     exitloop1:
+
+    li $v0, 4
+    la $a0, prompt2                 # print prompt2 
+    syscall
+    add $t1, $s1, $zero
+    li $t3, 0
+    printa:
+        slt $t4, $t3, $t0
+        beq $t4, $zero, exitPrinta   # if i > n , then go to exitloop 
+        
+        li $v0, 1
+        lw $a0, ($t1)
+        syscall                     # print a[i]
+
+        li $v0, 4
+        la $a0, tab
+        syscall                     # print tab
+        
+        addi $t3, $t3, 1            # i++
+        addi $t1, $t1, 4
+    j printa
+    exitPrinta:
+
+    syscall
+    li $v0, 4
+    la $a0, prompt3
+    syscall                         # print prompt3
+
+    add $t1, $s2, $zero
+    li $t3, 0
+    printb:
+        slt $t4, $t3, $t0
+        beq $t4, $zero, exitPrintb   # if i > n , then go to exitloop 
+        
+        li $v0, 1
+        lw $a0, ($t1)
+        syscall                     # print a[i]
+
+        li $v0, 4
+        la $a0, tab
+        syscall                     # print tab
+        
+        addi $t3, $t3, 1            # i++
+        addi $t1, $t1, 4
+    j printb
+    exitPrintb:
 
     lw $t0, 0($sp)                  # load the option value from stack
     addi $sp $sp, 4                 # free memory space from stack
     jr $ra
-
 
 
 
