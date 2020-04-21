@@ -6,103 +6,83 @@ input:   	  	.space 101
 start:   	  	.asciiz "Enter an input string: "
 palindrome:  	.asciiz " is palindrome."
 notPalindrome:  .asciiz " is not palindrome."
-newLine:	 	.asciiz "\n"
 				.text
 				.globl main
-			
 main:
 	li $v0, 4                 # Print start
 	la $a0, start
     syscall
 	
-	la $t0, input
-	la $t1, input
-	la $t7, newLine 
-    lb $t7, 0($t7)
-	
-	li $v0, 8 			
-    la $a0, input 		
-    li $a1, 100 		
+    li $v0, 8				  # Read input
+    li $a1, 100
+    la $a0, input
     syscall
-	
-	addu $s0, $0, 0		  	  # i = 0
-	
-strlen:	
-	lb $t2, 0($t0)
-	li $v0,11
-	lb $a0, 0($t0)
-	syscall
-	
-	la	$a0, newLine		  # Print \n
-	li	$v0, 4
-	syscall
-	
-	add $t0, $t0, 1
-	
-	beq $t2, $t7, strlenEnd
-	
-	addu $s0, $s0, 1		  	  # i += 1 
-	
-	j strlen
-	
-strlenEnd:
-	sub $s0, $s0, 1
-	la $t0, input
-	
-palindromeFunc:
-	add $t1, $t1, $s0
-	div $t4, $s0, 2
-	addu $t5, $0, 0
-	
-	palindromeFuncLoop:
-		lb $t2, 0($t0)
-		lb $t3, 0($t1)
-		
-		li $v0,11
-		lb $a0, 0($t0)
-		syscall
-	
-		la	$a0, newLine		  # Print \n
-		li	$v0, 4
-		syscall
-	
-		li $v0,11
-		lb $a0, 0($t1)
-		syscall
-	
-		la	$a0, newLine		  # Print \n
-		li	$v0, 4
-		syscall
-		
-		bne $t2, $t3, notPalindromeEnd
-		beq $t5, $t4, palindromeEnd
-		
-		add $t0, $t0, 1
-		sub $t1, $t1, 1
-		add $t5, $t5, 1
-		
-		j palindromeFuncLoop
 
-palindromeEnd:
-	la	$a0, input		  # Print \n
-	li	$v0, 4
-	syscall
+    li $v0, 4
+    li $t0, 0				   # t0 = 0
+	addu $t2, $0, 0		  	   # length = 0
+
+lowercase:
+    lb $t1, input($t0)		   # t1 = input[t0]
+	beq $t1, 0, palindromeFunc # if t1 == '\0'
+	beq $t1, 10, removeNewLine # if t1 == '\n'
+    blt $t1, 65, increment	   # if t1 == 'A'
+    bgt $t1, 90, increment	   # if t1 == 'Z'
+    add $t1, $t1, 32		   # t1 += 32
+    sb $t1, input($t0)		   # input[t0] = t1
+	j lowercase			  	   # Go back to lowercase
 	
-	la	$a0, palindrome		  # Print \n
-	li	$v0, 4
-	syscall
+	removeNewLine:
+		sub $t1, $t1, 10	   # t1 -= 10 for null character
+		sb $t1, input($t0)	   # input[t0] = t1
+		addi $t0, $t0, 1	   # t0 += 1
+		j lowercase			   # Go back to lowercase
+		
+	increment: 
+		addi $t0, $t0, 1	   # t0 += 1
+		add $t2, $t2, 1		   # length += 1
+		j lowercase			   # Go back to lowercase
+
+palindromeFunc:	
+	li $t0, 0				   # t0 = 0
+	add $t1, $t2, 0			   # t1 = length
+	sub $t1, $t1, 1	   		   # t1 -= 1
+	div $t2, $t2, 2			   # length = length / 2
 	
-	j end
-notPalindromeEnd:
-	la	$a0, input		  # Print \n
-	li	$v0, 4
-	syscall
-	
-	la	$a0, notPalindrome		  # Print \n
-	li	$v0, 4
-	syscall
-	
-	j end
+	palindromeLoop:
+		lb $t3, input($t0)		   # t3 = input[t0]
+		lb $t4, input($t1)		   # t4 = input[length]
+		
+		bne $t3, $t4, notPalindromeEnd # if input[t0] != input[length]
+		beq $t0, $t2, palindromeEnd	   # if t0 == length2
+		
+		add $t0, $t0, 1			# t0 += 1
+		sub $t1, $t1, 1			# t0 -= 1
+		
+		j palindromeLoop
+
+		palindromeEnd:
+			la	$a0, input		  # Print input
+			li	$v0, 4
+			syscall
+			
+			la	$a0, palindrome	  # Print palindrome message
+			li	$v0, 4
+			syscall
+			
+			j end
+			
+		notPalindromeEnd:
+			la	$a0, input		   # Print input
+			li	$v0, 4
+			syscall
+			
+			la	$a0, notPalindrome # Print notPalindrome message
+			li	$v0, 4
+			syscall
+			
+			j end
+
 end:
-	li $v0, 10  			  # Finish the program
-	syscall
+    li $v0, 10
+    syscall
