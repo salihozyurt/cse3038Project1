@@ -25,9 +25,9 @@ prompt6:        .asciiz "Enter the first dimension of first matrix: "
 prompt7:        .asciiz "Enter the second dimension of first matrix: "
 prompt8:        .asciiz "Multiplication of Matrix:\n"
 
-prompt9:        .asciiz "\nEnter an input string: "
-prompt10:       .asciiz "\n is palindrome."
-prompt11:       .asciiz "\n is not palindrome."
+prompt9:        .asciiz "Enter an input string: "
+prompt10:       .asciiz " is palindrome.\n"
+prompt11:       .asciiz " is not palindrome.\n"
 
 newLine:        .asciiz "\n"
 tab:            .asciiz "\t"
@@ -414,8 +414,6 @@ stringToInteger:
         j do1
     exit1:
 
-
-
     lw $t0, ($sp)
     lw $t1, 4($sp)
     addi $sp, $sp, 8
@@ -447,6 +445,82 @@ jr $ra
 question3:
     addi $sp, $sp, -4               # loan space from stack
     sw $t0, 0($sp)                  # store the option value in stack
+
+    li $v0, 4                 # Print start
+	la $a0, prompt9
+    syscall
+	
+    li $v0, 8				  # Read input
+    li $a1, 1024
+    la $a0, input
+    syscall
+
+    li $v0, 4
+    li $t0, 0				   # t0 = 0
+	addu $t2, $0, 0		  	   # length = 0
+
+lowercase:
+    lb $t1, input($t0)		   # t1 = input[t0]
+	beq $t1, 0, palindromeFunc # if t1 == '\0'
+	beq $t1, 10, removeNewLine # if t1 == '\n'
+    blt $t1, 65, increment	   # if t1 == 'A'
+    bgt $t1, 90, increment	   # if t1 == 'Z'
+    add $t1, $t1, 32		   # t1 += 32
+    sb $t1, input($t0)		   # input[t0] = t1
+	j lowercase			  	   # Go back to lowercase
+	
+	removeNewLine:
+		sub $t1, $t1, 10	   # t1 -= 10 for null character
+		sb $t1, input($t0)	   # input[t0] = t1
+		addi $t0, $t0, 1	   # t0 += 1
+		j lowercase			   # Go back to lowercase
+		
+	increment: 
+		addi $t0, $t0, 1	   # t0 += 1
+		add $t2, $t2, 1		   # length += 1
+		j lowercase			   # Go back to lowercase
+
+palindromeFunc:	
+	li $t0, 0				   # t0 = 0
+	add $t1, $t2, 0			   # t1 = length
+	sub $t1, $t1, 1	   		   # t1 -= 1
+	div $t2, $t2, 2			   # length = length / 2
+	
+	palindromeLoop:
+		lb $t3, input($t0)		   # t3 = input[t0]
+		lb $t4, input($t1)		   # t4 = input[length]
+		
+		bne $t3, $t4, notPalindromeEnd # if input[t0] != input[length]
+		beq $t0, $t2, palindromeEnd	   # if t0 == length2
+		
+		add $t0, $t0, 1			# t0 += 1
+		sub $t1, $t1, 1			# t0 -= 1
+		
+		j palindromeLoop
+
+		palindromeEnd:
+			la	$a0, input		  # Print input
+			li	$v0, 4
+			syscall
+			
+			la	$a0, prompt10	  # Print palindrome message
+			li	$v0, 4
+			syscall
+			
+			j end
+			
+		notPalindromeEnd:
+			la	$a0, input		   # Print input
+			li	$v0, 4
+			syscall
+			
+			la	$a0, prompt11 # Print notPalindrome message
+			li	$v0, 4
+			syscall
+			
+			j end
+
+    end:
 
     lw $t0, 0($sp)                  # load the option value from stack
     addi $sp $sp, 4                 # free memory space from stack
