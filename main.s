@@ -306,52 +306,55 @@ question2:
             insideLoop:
                 beq $t6, $t1 endInsideLoop
 
-                add $t7, $s0, $zero
-                addi $a0, $t4, 0
-                addi $a1, $t6, 0
-                add $t8, $t1, $zero
-                jal getElementAddress
-                add $s3, $v1, $zero
+                add $t7, $s0, $zero         # $t7 is base address of array (first array)
+                addi $a0, $t4, 0            # $t4 is row        
+                addi $a1, $t6, 0            # $t6 is col
+                add $t8, $t1, $zero         # $t8 is column upperbound
+                jal getElementAddress       # getElementAddres(base, row, col, clb)
+                add $s3, $v1, $zero         # $s3 is location of element
 
-                add $t7, $s1, $zero
-                addi $a0, $t6, 0
-                addi $a1, $t5, 0
-                add $t8, $t3, $zero
-                jal getElementAddress
-                add $s4, $v1, $zero
+                add $t7, $s1, $zero         # $t7 is base address of array (second array)
+                addi $a0, $t6, 0            # $t6 is row
+                addi $a1, $t5, 0            # $t5 is col
+                add $t8, $t3, $zero         # $t8 is column uppercound
+                jal getElementAddress       # getElementAddres(base, row, col, clb)
+                add $s4, $v1, $zero         # $t4 is location of element
 
-                lw $s5, ($s3)
+                lw $s5, ($s3)               
                 lw $s6, ($s4)
-                mul $s5, $s5, $s6
-                add $t9, $t9, $s5
+                mul $s5, $s5, $s6           # $s5 = $s5 * $s6
+                add $t9, $t9, $s5           # $t9 = $t9 + $s5
 
-                addi $t6, $t6, 1
+                addi $t6, $t6, 1            # $t6++
             j insideLoop
             endInsideLoop:
 
-            add $t7, $s2, $zero
-            addi $a0, $t4, 0
-            addi $a1, $t5, 0
-            add $t8, $t3, $zero
-            jal getElementAddress
-            add $s7, $v1, $zero
-            sw $t9, ($s7)
-            li $t9, 0
+            add $t7, $s2, $zero             # $t7 is base address of array (multiplication array)
+            addi $a0, $t4, 0                # $t4 is row
+            addi $a1, $t5, 0                # $t5 is col
+            add $t8, $t3, $zero             # $t8 is column uppercound
+            jal getElementAddress           # getElementAddres(base, row, col, clb)
+            add $s7, $v1, $zero             # $s7 is location of element
+            sw $t9, ($s7)                   # store $t9 value location of multiplication array
+            li $t9, 0                       # $t9 = 0
 
             li $v0, 1
             lw $a0, ($s7)
-            syscall
+            syscall                         # write element of multiplication array
 
             li $v0, 4
             la $a0, tab
-            syscall
-        addi $t5, $t5, 1
+            syscall                         # write tab
+
+            addi $t5, $t5, 1                # $t5 = $t5 + 1
         j colLoop
         endColLoop:
+        
         li $v0, 4
         la $a0, newLine
-        syscall
-    addi $t4, $t4, 1
+        syscall                             # write newline
+
+        addi $t4, $t4, 1                    # $t4 = $t4 + 1
     j rowLoop
     endrowLoop:
 
