@@ -23,22 +23,17 @@ prompt4:        .asciiz "Enter the first matrix: "
 prompt5:        .asciiz "Enter the second matrix: "
 prompt6:        .asciiz "Enter the first dimension of first matrix: "
 prompt7:        .asciiz "Enter the second dimension of first matrix: "
-prompt8:        .asciiz "Multiplication of Matrix:"
+prompt8:        .asciiz "Multiplication of Matrix:\n"
 
 prompt9:        .asciiz "\nEnter an input string: "
 prompt10:       .asciiz "\n is palindrome."
 prompt11:       .asciiz "\n is not palindrome."
-
-
 
 newLine:        .asciiz "\n"
 tab:            .asciiz "\t"
 space:          .asciiz " "
 
 input:          .space 1024
-matrix1:        .space 800
-matrix2:        .space 800
-
 
 .text
 .globl main
@@ -222,6 +217,17 @@ question2:
     jal findMatrixElementCount
     add $t0, $v0, $zero             # elmCount1 = findMatrixElementCount(mat1)
 
+    li $v0, 9
+    sll $a0, $t0, 2
+    syscall                         # allocate memmory
+    add $s2, $v0, $zero             # matrix1 = $v0
+
+    add $a0, $s0, $zero
+    add $a1, $s2, $zero
+    jal stringToInteger             # stringToInteger(mat1, matrix1)
+    add $s0, $s2, $zero
+
+
     li $v0, 4
     la $a0, prompt5
     syscall                         # print prompt5
@@ -233,23 +239,121 @@ question2:
     jal findMatrixElementCount
     add $t1, $v0, $zero             # elmCount2 = findMatrixElementCount(mat2)
 
-    li $v0, 4
-    la $a0, prompt6
-    syscall                         # print prompt6
-    li $v0, 5
-    syscall                         
-    move $t3, $v0                   # read firstDimension
+    li $v0, 9
+    sll $a0, $t1, 2
+    syscall                         # allocate memmory
+    add $s2, $v0, $zero             # matrix2 = $v0 
+
+    add $a0, $s1, $zero
+    add $a1, $s2, $zero
+    jal stringToInteger             # stringToInteger(mat2, matrix2)
+    add $s1, $s2, $zero
 
     li $v0, 4
     la $a0, prompt6
     syscall                         # print prompt6
     li $v0, 5
     syscall                         
-    move $t4, $v0                   # read secondDimension 
+    add $t3, $v0, $zero             # read firstDimension
 
-    li $v0, 1
-    add $a0, $t0, $zero
+    li $v0, 4
+    la $a0, prompt7
+    syscall                         # print prompt7
+    li $v0, 5
+    syscall                         
+    add $t4, $v0, $zero             # read secondDimension 
+
+    
+    rem $t7, $t1, $t4
+    bne $t7, $zero, else            # if (elmCount2 % secondDimension == 0)
+        add $t5, $t4, $zero         # row2 = secondDimension
+        div $t6, $t1, $t4           # col2 = elmCount2 / secondDimension
+    j exitIf    
+    else:                           # else
+        add $t5, $t3, $zero         # row2 = firstDimension
+        div $t6, $t1, $t3           # col2 = elmCount / firstDimension
+        add $t7, $t3, $zero         # temp = firstDimension
+        add $t3, $t4, $zero         # firstDimension = secondDimension (row1)
+        add $t4, $t7, $zero         # secondDimension = temp    (col1)
+    exitIf:
+    
+
+    add $t0, $t3, $zero             # $t0 = row1
+    add $t1, $t4, $zero             # $t1 = col1
+    add $t2, $t5, $zero             # $t2 = row2  
+    add $t3, $t6, $zero             # $t3 = col2
+
+    li $v0, 9
+    mul $a0, $t0, $t3
+    sll $a0, $a0, 2
+    syscall                         # allocate memmory
+    add $s2, $v0, $zero             # resultMatrix = $v0
+
+    # Matrix multiplication
+    li $v0, 4
+    la $a0, prompt8
     syscall
+    li $t4, 0
+    li $t9, 0
+    rowLoop:
+        beq $t4, $t0, endrowLoop
+
+        li, $t5, 0
+        colLoop:
+            beq $t5, $t3, endColLoop
+
+            li $t6, 0
+            insideLoop:
+                beq $t6, $t1 endInsideLoop
+
+                add $t7, $s0, $zero
+                addi $a0, $t4, 0
+                addi $a1, $t6, 0
+                add $t8, $t1, $zero
+                jal getElementAddress
+                add $s3, $v1, $zero
+
+                add $t7, $s1, $zero
+                addi $a0, $t6, 0
+                addi $a1, $t5, 0
+                add $t8, $t3, $zero
+                jal getElementAddress
+                add $s4, $v1, $zero
+
+                lw $s5, ($s3)
+                lw $s6, ($s4)
+                mul $s5, $s5, $s6
+                add $t9, $t9, $s5
+
+                addi $t6, $t6, 1
+            j insideLoop
+            endInsideLoop:
+
+            add $t7, $s2, $zero
+            addi $a0, $t4, 0
+            addi $a1, $t5, 0
+            add $t8, $t3, $zero
+            jal getElementAddress
+            add $s7, $v1, $zero
+            sw $t9, ($s7)
+            li $t9, 0
+
+            li $v0, 1
+            lw $a0, ($s7)
+            syscall
+
+            li $v0, 4
+            la $a0, tab
+            syscall
+        addi $t5, $t5, 1
+        j colLoop
+        endColLoop:
+        li $v0, 4
+        la $a0, newLine
+        syscall
+    addi $t4, $t4, 1
+    j rowLoop
+    endrowLoop:
 
     lw $t0, ($sp) 
     lw $ra, 4($sp)                  
@@ -278,6 +382,65 @@ findMatrixElementCount:
     addi $sp, $sp, 4                    # return
 jr $ra
 
+# stringToInteger
+stringToInteger:
+    addi $sp, $sp, -8
+    sw $t0, ($sp)
+    sw $t1, 4($sp)
+
+    add $t0, $a0, $zero                 # tempStr = arg0
+    add $t3, $a1, $zero                 # temparr = arg1[]
+    lbu $t1, ($t0)                      # chr = tempStr[0]
+    li $t2, 0
+    do1:
+        beq $t1, 32, else1
+        beq $t1, 10, while1             # if chr !=' ' || chr != '\n'
+            mul $t2, $t2, 10            # number = number * 10
+            addi $t4, $t1, -48          # tempNumber = tempNumber - 48
+            add $t2, $t2, $t4           # number = number + tempNumber
+            addi $t0, $t0,1             # tempStr = &tempStr[1]
+            lbu $t1, ($t0)              # chr = tempStr[0]
+            j do1                       # continue
+        else1:
+            sw $t2, ($t3)               # temparr[0] = number 
+            addi $t0, $t0, 1            # tempStr = &tempStr[1]
+	        lbu $t1, ($t0)              # chr = tempStr[0]
+            addi $t3, $t3, 4            # &temparr = &temparr + 4 
+            li $t2, 0                   # number = 0
+            j do1
+    while1:
+        sw $t2, ($t3)                   # temparr[0] = number 
+        beq $t1, 10, exit1
+        j do1
+    exit1:
+
+
+
+    lw $t0, ($sp)
+    lw $t1, 4($sp)
+    addi $sp, $sp, 8
+jr $ra
+
+getElementAddress:
+    addi $sp, $sp, -12
+    sw $s0, ($sp)
+    sw $t0, 4($sp)
+    sw $t1, 8($sp)
+
+    add $s0, $t7, $zero             # base address
+    addi $t1, $t8, -1               # col upperbound
+    
+    addi $t1, $t1, 1                # col upperbound + 1 
+    mul $t0, $a0, $t1               
+    add $t0, $t0, $a1
+    sll $t0, $t0, 2
+    add $v1, $s0, $t0
+
+    lw $s0, ($sp)
+    lw $t0, 4($sp)
+    lw $t1, 8($sp)
+    addi $sp, $sp, 12
+jr $ra
 
 
 # Question 3
