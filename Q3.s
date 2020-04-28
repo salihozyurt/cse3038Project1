@@ -18,9 +18,8 @@ main:
     la $a0, input
     syscall
 
-    li $v0, 4
     li $t0, 0				   # t0 = 0
-	addu $t2, $0, 0		  	   # length = 0
+	li $t2, 0		  	   	   # length = 0
 
 lowercase:
     lb $t1, input($t0)		   # t1 = input[t0]
